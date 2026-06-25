@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나비독서 답안지 채점기</title>
+<style>
+  :root{
+    --royal:#002F6C;
+    --cobalt:#0047AB;
+    --azure:#3B82F6;
+    --bg:#F4F7FC;
+    --card:#FFFFFF;
+    --line:#D8E1F0;
+    --ok:#1E8E5A;
+    --bad:#D64545;
+    --warn:#B8860B;
+    --text:#1A2433;
+    --sub:#5C6B82;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding:24px 16px 80px;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+  header{margin-bottom:20px;}
+  header .eyebrow{
+    font-size:12px;font-weight:700;letter-spacing:.12em;
+    color:var(--azure);text-transform:uppercase;
+  }
+  header h1{
+    margin:4px 0 4px;font-size:22px;font-weight:800;color:var(--royal);
+  }
+  header p{margin:0;font-size:13px;color:var(--sub);}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:16px;
+    box-shadow:0 2px 8px rgba(0,47,108,0.04);
+  }
+  .step-label{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12px;font-weight:700;color:var(--cobalt);
+    margin-bottom:12px;
+  }
+  .step-label .num{
+    width:20px;height:20px;border-radius:50%;
+    background:var(--royal);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;
+  }
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .field{flex:1;min-width:120px;}
+  label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px;font-weight:600;}
+  input[type=text], input[type=number], textarea{
+    width:100%;border:1px solid var(--line);border-radius:8px;
+    padding:9px 10px;font-size:14px;color:var(--text);background:#FAFBFE;
+  }
+  input:focus, textarea:focus{outline:none;border-color:var(--azure);}
+  textarea{resize:vertical;min-height:44px;font-family:monospace;}
+  .hint{font-size:11.5px;color:var(--sub);margin-top:4px;line-height:1.5;}
+
+  button{
+    border:none;border-radius:9px;padding:10px 18px;
+    font-size:13.5px;font-weight:700;cursor:pointer;
+    transition:opacity .15s;
+  }
+  button:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-primary{background:var(--royal);color:#fff;}
+  .btn-primary:hover:not(:disabled){opacity:.88;}
+  .btn-ghost{background:#EAF0FB;color:var(--royal);}
+  .btn-ghost:hover:not(:disabled){opacity:.8;}
+  .btn-danger{background:#FCEAEA;color:var(--bad);}
+
+  .top-actions{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:14px;gap:8px;flex-wrap:wrap;
+  }
+  .link-btn{
+    background:none;border:none;color:var(--sub);font-size:12px;
+    text-decoration:underline;cursor:pointer;padding:4px;font-weight:600;
+  }
+  .admin-panel{
+    background:#FFF9EC;border:1px solid #F0D27A;
+  }
+  .admin-panel .step-label{color:#8A6300;}
+  .admin-round-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px;
+  }
+  .admin-round-row:last-child{border-bottom:none;}
+  .admin-round-row button{padding:5px 10px;font-size:11px;}
+
+  .upload-box{
+    display:block;
+    border:2px dashed var(--line);border-radius:10px;
+    padding:18px;text-align:center;cursor:pointer;
+    background:#FAFBFE;
+  }
+  .upload-box:hover{border-color:var(--azure);}
+  .upload-box span{display:block;font-size:12.5px;color:var(--sub);margin-top:4px;}
+
+  canvas{max-width:100%;border-radius:8px;cursor:crosshair;display:block;touch-action:none;}
+  .canvas-wrap{position:relative;margin-top:12px;}
+
+  .magnifier{
+    position:fixed;width:120px;height:120px;border-radius:50%;
+    border:3px solid var(--azure);box-shadow:0 6px 18px rgba(0,0,0,.32);
+    overflow:hidden;display:none;z-index:80;background:#fff;pointer-events:none;
+  }
+
+  @media (max-width:480px){
+    body{padding:16px 10px 90px;}
+    button{width:100%;padding:13px 16px;font-size:14.5px;}
+    .row{flex-direction:column;}
+    .row > button{margin-bottom:8px;}
+    .corner-chip{font-size:12px;padding:6px 11px;}
+    header h1{font-size:19px;}
+  }
+
+  .corner-status{
+    display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;
+  }
+  .corner-chip{
+    font-size:11px;padding:4px 9px;border-radius:20px;
+    background:#EAF0FB;color:var(--cobalt);font-weight:600;
+  }
+  .corner-chip.done{background:var(--royal);color:#fff;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
+  th,td{padding:7px 8px;text-align:center;border-bottom:1px solid var(--line);}
+  th{color:var(--sub);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;}
+  td.ans-wrong{color:var(--bad);font-weight:700;}
+  td.ans-ok{color:var(--ok);font-weight:700;}
+  .tag{font-size:10.5px;padding:2px 7px;border-radius:6px;font-weight:700;}
+  .tag-ok{background:#E4F6ED;color:var(--ok);}
+  .tag-bad{background:#FBE9E9;color:var(--bad);}
+  .tag-warn{background:#FBF1DD;color:var(--warn);}
+
+  .score-banner{
+    display:flex;align-items:center;justify-content:space-between;
+    background:linear-gradient(135deg,var(--royal),var(--cobalt));
+    color:#fff;border-radius:12px;padding:18px 20px;margin-bottom:14px;
+  }
+  .score-banner .big{font-size:30px;font-weight:800;}
+  .score-banner .small{font-size:12px;opacity:.85;margin-top:2px;}
+
+  .pass-fail-banner{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    border-radius:12px;padding:14px;margin-bottom:14px;
+    font-size:18px;font-weight:800;
+  }
+  .pass-fail-banner.pass{background:#E4F6ED;color:var(--ok);}
+  .pass-fail-banner.fail{background:#FBE9E9;color:var(--bad);}
+  .pass-fail-banner .meta{font-size:12.5px;font-weight:600;opacity:.8;}
+
+  .select-row select{
+    width:100%;border:1px solid var(--line);border-radius:8px;
+    padding:9px 10px;font-size:14px;color:var(--text);background:#FAFBFE;
+  }
+  .exam-info{
+    display:none;margin-top:12px;background:#EFF4FC;border-radius:10px;padding:12px 14px;
+  }
+  .exam-info .row{margin-bottom:0;}
+  .exam-info .field div{font-size:14px;font-weight:700;color:var(--royal);}
+
+  .student-list-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;
+    gap:8px;
+  }
+  .student-list-item:last-child{border-bottom:none;}
+  .student-list-item .name{font-weight:700;color:var(--royal);}
+  .student-list-item .score{font-weight:700;white-space:nowrap;}
+  .student-list-item .row-del{
+    background:none;border:none;color:var(--bad);font-size:11px;
+    cursor:pointer;padding:2px 4px;font-weight:700;
+  }
+  .group-header{
+    display:flex;justify-content:space-between;align-items:baseline;
+    background:#EFF4FC;border-radius:8px;padding:7px 10px;
+    margin:14px 0 4px;font-size:12.5px;font-weight:700;color:var(--royal);
+  }
+  .group-header:first-child{margin-top:0;}
+  .group-header .sub{font-size:11px;font-weight:600;color:var(--sub);}
+
+  .divider{height:1px;background:var(--line);margin:16px 0;}
+  .note{
+    font-size:12px;color:var(--sub);background:#EFF4FC;
+    border-radius:8px;padding:10px 12px;line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">나비독서 · 가맹점 공통 도구</div>
+    <h1>답안지 사진 채점기</h1>
+    <p>API 호출 없이 브라우저에서 즉시 처리됩니다. 인터넷 연결이 없어도 동작합니다.</p>
+  </header>
+
+  <div class="top-actions" style="justify-content:flex-end;">
+    <button class="link-btn" id="adminToggleBtn">관리자 모드</button>
+  </div>
+
+  <!-- 관리자 패널 (PIN 입력 후 표시) -->
+  <div class="card admin-panel" id="adminPanel" style="display:none;">
+    <div class="step-label"><span class="num">A</span> 관리자 모드 · 회차 추가/관리</div>
+
+    <div class="row">
+      <div class="field">
+        <label>급수</label>
+        <select id="adminGrade"></select>
+      </div>
+      <div class="field">
+        <label>시험구분</label>
+        <select id="adminExamType">
+          <option value="정규시험">정규시험</option>
+          <option value="예상시험">예상시험</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>회차 (예: 2701)</label>
+        <input type="text" id="adminRound" placeholder="2701">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>문항 수</label>
+        <input type="number" id="adminQCount" value="30" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>선택지 수</label>
+        <input type="number" id="adminOptCount" value="4" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>합격 기준(점)</label>
+        <input type="number" id="adminPassScore" value="70" inputmode="numeric">
+      </div>
+    </div>
+    <div class="field">
+      <label>정답 (쉼표로 구분, 문항 수만큼)</label>
+      <textarea id="adminAnswers" placeholder="예: 2,4,1,3,2,...,1"></textarea>
+    </div>
+    <div class="row" style="margin-top:6px;">
+      <button class="btn-primary" id="adminSaveBtn">이 회차 저장</button>
+      <button class="btn-ghost" id="adminExportBtn">전체 데이터 내보내기(JSON)</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="step-label" style="color:#8A6300;"><span class="num" style="background:#8A6300;">B</span> CSV 일괄 등록</div>
+    <div class="hint" style="margin-bottom:10px;">
+      엑셀에서 급수·시험구분·회차별로 행을 채운 뒤 CSV로 저장해서 올리면 여러 회차를 한 번에 등록합니다.
+      정답 칸은 쉼표 대신 <strong>세미콜론( ; )</strong>으로 구분하세요 (예: 2;4;1;3;2).
+    </div>
+    <div class="row">
+      <button class="btn-ghost" id="adminTemplateBtn">CSV 양식 다운로드</button>
+      <button class="btn-ghost" id="adminCsvUploadBtn">CSV 파일 선택</button>
+      <input type="file" id="adminCsvInput" accept=".csv,text/csv" style="display:none;">
+    </div>
+    <div id="adminCsvResult" class="hint" style="margin-top:8px;"></div>
+
+    <div class="divider"></div>
+    <div class="hint" style="margin-bottom:6px;">저장된 급수/시험구분/회차 목록</div>
+    <div id="adminRoundList"></div>
+  </div>
+
+  <!-- 채점자 이름 (이 탭에서 계속 유지) -->
+  <div class="card">
+    <label>채점자(지사장) 이름</label>
+    <input type="text" id="graderName" placeholder="예: 김지사장">
+    <div class="hint" style="margin-top:6px;">한 번 입력하면 이 화면을 끄기 전까지 계속 기억합니다.</div>
+  </div>
+
+  <!-- STEP 1: 시험구분·급수·회차 선택 -->
+  <div class="card">
+    <div class="step-label"><span class="num">1</span> 시험구분 · 급수 · 회차 선택</div>
+    <div class="row select-row">
+      <div class="field">
+        <label>시험구분</label>
+        <select id="examTypeSelect">
+          <option value="">시험구분 선택</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>급수</label>
+        <select id="gradeSelect" disabled>
+          <option value="">먼저 시험구분을 선택하세요</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>회차</label>
+        <select id="roundSelect" disabled>
+          <option value="">먼저 급수를 선택하세요</option>
+        </select>
+      </div>
+    </div>
+    <div class="exam-info" id="examInfo"></div>
+    <div class="hint" style="margin-top:8px;">
+      정답과 합격 기준은 프로그램에 미리 저장되어 있습니다. 새 급수/시험구분/회차를 추가하려면 코드 상단의 ANSWER_DB를 수정하세요.
+    </div>
+  </div>
+
+  <!-- STEP 2: 사진 업로드 -->
+  <div class="card">
+    <div class="step-label"><span class="num">2</span> 답안지 사진 업로드</div>
+    <label class="upload-box" id="uploadBox" for="fileInput">
+      <strong>탭하여 촬영 또는 사진 선택</strong>
+      <span>답안 마킹 칸 전체가 또렷하게 보이도록 촬영하세요</span>
+    </label>
+    <input type="file" id="fileInput" accept="image/*" capture="environment"
+      style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;left:-9999px;">
+
+    <div class="canvas-wrap" id="canvasWrap" style="display:none;">
+      <div class="hint" style="margin-bottom:8px;">
+        아래 사진에서 <strong>마킹 칸 영역의 네 꼭짓점</strong>을 순서대로 탭하세요:
+        ① 좌상단 → ② 우상단 → ③ 좌하단 → ④ 우하단<br>
+        찍은 점을 손가락으로 누른 채 끌면 위치를 미세 조정할 수 있습니다 (확대 루페 표시).
+      </div>
+      <canvas id="srcCanvas"></canvas>
+      <div class="magnifier" id="magnifier"><canvas id="magCanvas" width="120" height="120"></canvas></div>
+      <div class="corner-status">
+        <span class="corner-chip" id="chip0">① 좌상단</span>
+        <span class="corner-chip" id="chip1">② 우상단</span>
+        <span class="corner-chip" id="chip2">③ 좌하단</span>
+        <span class="corner-chip" id="chip3">④ 우하단</span>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn-ghost" id="resetCornersBtn">좌표 다시 찍기</button>
+        <button class="btn-primary" id="gradeBtn" disabled>채점 실행</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: 결과 -->
+  <div class="card" id="resultCard" style="display:none;">
+    <div class="step-label"><span class="num">3</span> 채점 결과</div>
+    <div class="pass-fail-banner" id="passFailBanner">
+      <span id="passFailLabel">-</span>
+      <span class="meta" id="passFailMeta"></span>
+    </div>
+    <div class="score-banner">
+      <div>
+        <div class="big" id="scoreBig">-</div>
+        <div class="small" id="scoreSub">정답 / 문항</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="small">불확실 마킹</div>
+        <div class="big" style="font-size:20px;" id="uncertainCount">0</div>
+      </div>
+    </div>
+
+    <table id="resultTable">
+      <thead><tr><th>문항</th><th>학생 답안</th><th>정답</th><th>채점</th><th>비고</th></tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="divider"></div>
+    <div class="row">
+      <div class="field">
+        <label>학생 이름 / 식별번호</label>
+        <input type="text" id="studentName" placeholder="예: 김민준 / 3반-12">
+      </div>
+    </div>
+    <button class="btn-primary" id="saveStudentBtn">이 결과 명단에 저장</button>
+    <span class="hint" id="cloudSyncStatus" style="margin-left:8px;"></span>
+  </div>
+
+  <!-- STEP 4: 채점 결과 관리 -->
+  <div class="card" id="listCard" style="display:none;">
+    <div class="step-label"><span class="num">4</span> 채점 결과 관리</div>
+    <div class="row select-row" style="margin-bottom:4px;">
+      <div class="field">
+        <label>시험구분</label>
+        <select id="filterExamType"><option value="">전체</option></select>
+      </div>
+      <div class="field">
+        <label>급수</label>
+        <select id="filterGrade"><option value="">전체</option></select>
+      </div>
+      <div class="field">
+        <label>회차</label>
+        <select id="filterRound"><option value="">전체</option></select>
+      </div>
+    </div>
+    <div class="hint" style="margin-bottom:10px;">시험구분 → 급수 → 회차 순으로 묶어서 보여줍니다. 결과는 이 기기에 자동 저장되어 다시 열어도 남아있습니다.</div>
+    <div id="studentList"></div>
+    <div class="divider"></div>
+    <div class="row">
+      <span class="hint" id="avgHint" style="flex:1;"></span>
+      <button class="btn-ghost" id="exportCsvBtn">CSV로 내보내기 (현재 필터)</button>
+      <button class="btn-danger" id="clearAllBtn">전체 삭제</button>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>정확도를 높이려면:</strong> 답안 마킹은 진하게 채워주시고, 사진은 그림자나 빛 반사 없이 평평한 곳에서 촬영해 주세요.
+    꼭짓점 보정은 사진마다 다시 찍어도 되고, 동일한 각도로 연속 촬영한다면 좌표를 유지한 채 다음 사진만 바꿔도 됩니다.
+  </div>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmqnoQWP3eBdHn2T3mgSeIhg1n1UfHxRk",
+    authDomain: "omr-reader-dac48.firebaseapp.com",
+    projectId: "omr-reader-dac48",
+    storageBucket: "omr-reader-dac48.firebasestorage.app",
+    messagingSenderId: "259286875743",
+    appId: "1:259286875743:web:69b35f7f9090d3ec6c65ea"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 메인 코드(비-모듈 스크립트)에서 호출할 수 있도록 전역에 노출
+  window.nabiLogResultToFirebase = async function(data){
+    try{
+      await addDoc(collection(db, 'results'), { ...data, gradedAt: serverTimestamp() });
+      return { ok: true };
+    }catch(err){
+      console.error('Firestore 저장 실패:', err);
+      return { ok: false, error: err && err.message };
+    }
+  };
+</script>
+
+<script>
+(function(){
+  let img = new Image();
+  let imgLoaded = false;
+  let displayScale = 1; // display canvas px -> natural image px
+  let corners = []; // in natural image coordinates, order TL,TR,BL,BR
+  let lastResult = null;
+  let students = [];
+  let currentExam = null; // { grade, round, questionCount, optionCount, answers, passScore }
+
+  const GRADE_LIST = ["8급","준7급","7급","준6급","6급","준5급","5급","준4급","4급","준3급","3급"];
+  const STORAGE_KEY = 'nabi_omr_answer_db_v1';
+  const STUDENTS_KEY = 'nabi_omr_students_v1';
+  const ADMIN_PIN = '2580'; // 관리자 모드 PIN. 필요시 직접 바꿔서 사용하세요.
+
+  function loadStudents(){
+    try{
+      const raw = localStorage.getItem(STUDENTS_KEY);
+      if (raw) return JSON.parse(raw);
+    }catch(e){}
+    return [];
+  }
+  function saveStudents(){
+    try{ localStorage.setItem(STUDENTS_KEY, JSON.stringify(students)); }catch(e){}
+  }
+  students = loadStudents();
+
+  function dummyAnswers(n, optCount){
+    return Array.from({length:n}, (_,i) => (i % optCount) + 1);
+  }
+  function makeGradeSkeleton(){
+    return {
+      optionCount: 4,
+      passScore: 70, // TODO: 급수별 실제 합격 기준으로 교체
+      examTypes: {
+        "정규시험": {
+          "2701": { questionCount: 30, answers: dummyAnswers(30, 4) },
+          "2702": { questionCount: 30, answers: dummyAnswers(30, 4) }
+        },
+        "예상시험": {
+          "2701": { questionCount: 30, answers: dummyAnswers(30, 4) }
+        }
+      }
+    };
+  }
+  function buildDefaultDB(){
+    const db = {};
+    GRADE_LIST.forEach(g => { db[g] = makeGradeSkeleton(); });
+    return db;
+  }
+  function loadAnswerDB(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    }catch(e){}
+    return null;
+  }
+  function saveAnswerDB(db){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }catch(e){}
+  }
+
+  let ANSWER_DB = loadAnswerDB();
+  if (!ANSWER_DB){
+    ANSWER_DB = buildDefaultDB();
+    saveAnswerDB(ANSWER_DB);
+  }
+
+  const EXAM_TYPE_LIST = ["정규시험","예상시험"];
+  const gradeSelect = document.getElementById('gradeSelect');
+  const examTypeSelect = document.getElementById('examTypeSelect');
+  const roundSelect = document.getElementById('roundSelect');
+  const examInfo = document.getElementById('examInfo');
+
+  const GRADER_KEY = 'nabi_omr_grader_name';
+  const graderNameInput = document.getElementById('graderName');
+  try{
+    const savedGrader = sessionStorage.getItem(GRADER_KEY);
+    if (savedGrader) graderNameInput.value = savedGrader;
+  }catch(e){}
+  graderNameInput.addEventListener('input', () => {
+    try{ sessionStorage.setItem(GRADER_KEY, graderNameInput.value); }catch(e){}
+  });
+
+  function resetSelect(sel, placeholder){
+    sel.innerHTML = `<option value="">${placeholder}</option>`;
+    sel.disabled = true;
+  }
+
+  function refreshGradeOptionsFromDB(){
+    examTypeSelect.innerHTML = '<option value="">시험구분 선택</option>';
+    EXAM_TYPE_LIST.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t; opt.textContent = t;
+      examTypeSelect.appendChild(opt);
+    });
+    resetSelect(gradeSelect, '먼저 시험구분을 선택하세요');
+    resetSelect(roundSelect, '먼저 급수를 선택하세요');
+    currentExam = null;
+    updateExamInfo();
+    refreshGradeButtonState();
+  }
+  // refreshGradeOptionsFromDB()는 모든 DOM 참조가 준비된 뒤(스크립트 맨 끝)에서 최초 호출합니다.
+
+  // 시험구분/급수/회차 선택은 앱을 끄기 전까지(같은 탭에서) 유지됩니다.
+  const SELECTION_KEY = 'nabi_omr_last_selection';
+  function saveLastSelection(){
+    try{
+      sessionStorage.setItem(SELECTION_KEY, JSON.stringify({
+        examType: examTypeSelect.value, grade: gradeSelect.value, round: roundSelect.value
+      }));
+    }catch(e){}
+  }
+  function restoreLastSelection(){
+    let saved;
+    try{ saved = JSON.parse(sessionStorage.getItem(SELECTION_KEY) || 'null'); }catch(e){ saved = null; }
+    if (!saved || !saved.examType) return;
+    examTypeSelect.value = saved.examType;
+    examTypeSelect.dispatchEvent(new Event('change'));
+    if (!saved.grade || !ANSWER_DB[saved.grade] || !ANSWER_DB[saved.grade].examTypes[saved.examType]) return;
+    gradeSelect.value = saved.grade;
+    gradeSelect.dispatchEvent(new Event('change'));
+    if (!saved.round || !ANSWER_DB[saved.grade].examTypes[saved.examType][saved.round]) return;
+    roundSelect.value = saved.round;
+    roundSelect.dispatchEvent(new Event('change'));
+  }
+
+  examTypeSelect.addEventListener('change', () => {
+    resetSelect(gradeSelect, '먼저 시험구분을 선택하세요');
+    resetSelect(roundSelect, '먼저 급수를 선택하세요');
+    currentExam = null;
+    updateExamInfo();
+    refreshGradeButtonState();
+    saveLastSelection();
+    const t = examTypeSelect.value;
+    if (!t) return;
+    gradeSelect.disabled = false;
+    gradeSelect.innerHTML = '<option value="">급수 선택</option>';
+    Object.keys(ANSWER_DB).forEach(g => {
+      if (!ANSWER_DB[g].examTypes[t]) return; // 이 시험구분의 데이터가 없는 급수는 제외
+      const opt = document.createElement('option');
+      opt.value = g; opt.textContent = g;
+      gradeSelect.appendChild(opt);
+    });
+  });
+
+  gradeSelect.addEventListener('change', () => {
+    resetSelect(roundSelect, '먼저 급수를 선택하세요');
+    currentExam = null;
+    updateExamInfo();
+    refreshGradeButtonState();
+    saveLastSelection();
+    const t = examTypeSelect.value, g = gradeSelect.value;
+    if (!t || !g) return;
+    roundSelect.disabled = false;
+    roundSelect.innerHTML = '<option value="">회차 선택</option>';
+    Object.keys(ANSWER_DB[g].examTypes[t]).forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r; opt.textContent = r;
+      roundSelect.appendChild(opt);
+    });
+  });
+
+  roundSelect.addEventListener('change', () => {
+    const t = examTypeSelect.value, g = gradeSelect.value, r = roundSelect.value;
+    if (!t || !g || !r){ currentExam = null; updateExamInfo(); refreshGradeButtonState(); saveLastSelection(); return; }
+    const gradeData = ANSWER_DB[g];
+    const roundData = gradeData.examTypes[t][r];
+    currentExam = {
+      grade: g,
+      examType: t,
+      round: r,
+      questionCount: roundData.questionCount,
+      optionCount: gradeData.optionCount,
+      answers: roundData.answers,
+      passScore: gradeData.passScore
+    };
+    updateExamInfo();
+    refreshGradeButtonState();
+    saveLastSelection();
+  });
+
+  function updateExamInfo(){
+    if (!currentExam){ examInfo.style.display = 'none'; return; }
+    examInfo.style.display = 'block';
+    examInfo.innerHTML = `
+      <div class="row">
+        <div class="field"><label>문항 수</label><div>${currentExam.questionCount}문항</div></div>
+        <div class="field"><label>선택지 수</label><div>${currentExam.optionCount}개</div></div>
+        <div class="field"><label>합격 기준</label><div>${currentExam.passScore}점 이상</div></div>
+      </div>`;
+  }
+
+  const fileInput = document.getElementById('fileInput');
+  const uploadBox = document.getElementById('uploadBox');
+  const canvasWrap = document.getElementById('canvasWrap');
+  const srcCanvas = document.getElementById('srcCanvas');
+  const ctx = srcCanvas.getContext('2d');
+  const gradeBtn = document.getElementById('gradeBtn');
+  const resetCornersBtn = document.getElementById('resetCornersBtn');
+  const resultCard = document.getElementById('resultCard');
+  const listCard = document.getElementById('listCard');
+
+  // uploadBox는 <label for="fileInput">으로 네이티브 연결됨 (별도 JS 불필요)
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      img = new Image();
+      img.onload = () => {
+        imgLoaded = true;
+        corners = [];
+        updateCornerChips();
+        drawCanvas();
+        canvasWrap.style.display = 'block';
+        gradeBtn.disabled = true;
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function drawCanvas(){
+    const maxW = 700;
+    const scale = Math.min(1, maxW / img.naturalWidth);
+    displayScale = scale;
+    srcCanvas.width = img.naturalWidth * scale;
+    srcCanvas.height = img.naturalHeight * scale;
+    redrawAll();
+  }
+
+  function redrawAll(){
+    ctx.drawImage(img, 0, 0, srcCanvas.width, srcCanvas.height);
+    corners.forEach((c, i) => drawMarker(c.x * displayScale, c.y * displayScale, i));
+    if (corners.length === 4) drawQuad();
+  }
+
+  function drawMarker(dx, dy, idx){
+    ctx.beginPath();
+    ctx.arc(dx, dy, 9, 0, Math.PI*2);
+    ctx.fillStyle = '#0047AB';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(idx+1), dx, dy);
+  }
+
+  function drawQuad(){
+    const pts = corners.map(c => ({x: c.x*displayScale, y: c.y*displayScale}));
+    const order = [0,1,3,2]; // TL,TR,BR,BL for closed loop
+    ctx.beginPath();
+    ctx.moveTo(pts[order[0]].x, pts[order[0]].y);
+    for (let i=1;i<order.length;i++) ctx.lineTo(pts[order[i]].x, pts[order[i]].y);
+    ctx.closePath();
+    ctx.strokeStyle = '#3B82F6';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // ---- Pointer interaction: tap to place, drag existing marker to fine-tune ----
+  const magnifier = document.getElementById('magnifier');
+  const magCanvas = document.getElementById('magCanvas');
+  const magCtx = magCanvas.getContext('2d');
+  let draggingIndex = null;
+
+  function getCanvasXY(e){
+    const rect = srcCanvas.getBoundingClientRect();
+    const dx = (e.clientX - rect.left) * (srcCanvas.width / rect.width);
+    const dy = (e.clientY - rect.top) * (srcCanvas.height / rect.height);
+    return { dx, dy };
+  }
+
+  function showMagnifier(dx, dy, clientX, clientY){
+    const nx = dx / displayScale, ny = dy / displayScale;
+    const size = 120, zoom = 3;
+    const cropSize = size / zoom;
+    magCtx.clearRect(0,0,size,size);
+    magCtx.imageSmoothingEnabled = false;
+    magCtx.drawImage(img, nx-cropSize/2, ny-cropSize/2, cropSize, cropSize, 0, 0, size, size);
+    magCtx.strokeStyle = '#3B82F6';
+    magCtx.lineWidth = 1.5;
+    magCtx.beginPath();
+    magCtx.moveTo(size/2-12, size/2); magCtx.lineTo(size/2+12, size/2);
+    magCtx.moveTo(size/2, size/2-12); magCtx.lineTo(size/2, size/2+12);
+    magCtx.stroke();
+
+    let left = clientX - size/2;
+    let top = clientY - size - 28;
+    if (top < 8) top = clientY + 28;
+    magnifier.style.left = left + 'px';
+    magnifier.style.top = top + 'px';
+    magnifier.style.display = 'block';
+  }
+  function hideMagnifier(){ magnifier.style.display = 'none'; }
+
+  srcCanvas.addEventListener('pointerdown', (e) => {
+    if (!imgLoaded) return;
+    const { dx, dy } = getCanvasXY(e);
+
+    let nearIdx = -1;
+    for (let i=0;i<corners.length;i++){
+      const cx = corners[i].x*displayScale, cy = corners[i].y*displayScale;
+      if (Math.hypot(cx-dx, cy-dy) < 24) { nearIdx = i; break; }
+    }
+
+    if (nearIdx >= 0){
+      draggingIndex = nearIdx;
+      srcCanvas.setPointerCapture(e.pointerId);
+      showMagnifier(dx, dy, e.clientX, e.clientY);
+      return;
+    }
+
+    if (corners.length < 4){
+      corners.push({ x: dx/displayScale, y: dy/displayScale });
+      updateCornerChips();
+      redrawAll();
+      refreshGradeButtonState();
+      draggingIndex = corners.length - 1;
+      srcCanvas.setPointerCapture(e.pointerId);
+      showMagnifier(dx, dy, e.clientX, e.clientY);
+    }
+  });
+
+  srcCanvas.addEventListener('pointermove', (e) => {
+    if (draggingIndex === null) return;
+    const { dx, dy } = getCanvasXY(e);
+    corners[draggingIndex] = { x: dx/displayScale, y: dy/displayScale };
+    redrawAll();
+    showMagnifier(dx, dy, e.clientX, e.clientY);
+  });
+
+  function endDrag(e){
+    if (draggingIndex !== null){
+      try { srcCanvas.releasePointerCapture(e.pointerId); } catch(err){}
+    }
+    draggingIndex = null;
+    hideMagnifier();
+  }
+  srcCanvas.addEventListener('pointerup', endDrag);
+  srcCanvas.addEventListener('pointercancel', endDrag);
+
+  function updateCornerChips(){
+    for (let i=0;i<4;i++){
+      const chip = document.getElementById('chip'+i);
+      chip.classList.toggle('done', i < corners.length);
+    }
+  }
+
+  function refreshGradeButtonState(){
+    gradeBtn.disabled = !(currentExam && corners.length === 4);
+  }
+
+  resetCornersBtn.addEventListener('click', () => {
+    corners = [];
+    updateCornerChips();
+    refreshGradeButtonState();
+    if (imgLoaded) redrawAll();
+  });
+
+  // ---- Homography: maps unit square (u,v) in [0,1]x[0,1] -> source quad point ----
+  // corners order: 0=TL(u=0,v=0), 1=TR(u=1,v=0), 2=BL(u=0,v=1), 3=BR(u=1,v=1)
+  function computeHomography(pts){
+    const uv = [[0,0],[1,0],[0,1],[1,1]];
+    // Solve for a,b,c,d,e,f,g,h such that:
+    // x = (a*u + b*v + c) / (g*u + h*v + 1)
+    // y = (d*u + e*v + f) / (g*u + h*v + 1)
+    const A = [];
+    const B = [];
+    for (let i=0;i<4;i++){
+      const u = uv[i][0], v = uv[i][1];
+      const x = pts[i].x, y = pts[i].y;
+      A.push([u, v, 1, 0, 0, 0, -u*x, -v*x]); B.push(x);
+      A.push([0, 0, 0, u, v, 1, -u*y, -v*y]); B.push(y);
+    }
+    const sol = solveLinear(A, B);
+    return sol; // [a,b,c,d,e,f,g,h]
+  }
+
+  function solveLinear(A, B){
+    const n = A.length;
+    const M = A.map((row, i) => row.concat([B[i]]));
+    for (let col=0; col<n; col++){
+      let pivot = col;
+      for (let r=col+1; r<n; r++){
+        if (Math.abs(M[r][col]) > Math.abs(M[pivot][col])) pivot = r;
+      }
+      [M[col], M[pivot]] = [M[pivot], M[col]];
+      const pv = M[col][col];
+      if (Math.abs(pv) < 1e-12) continue;
+      for (let c=col; c<=n; c++) M[col][c] /= pv;
+      for (let r=0; r<n; r++){
+        if (r === col) continue;
+        const factor = M[r][col];
+        if (factor === 0) continue;
+        for (let c=col; c<=n; c++) M[r][c] -= factor * M[col][c];
+      }
+    }
+    return M.map(row => row[n]);
+  }
+
+  function applyHomography(h, u, v){
+    const [a,b,c,d,e,f,g,hh] = h;
+    const denom = g*u + hh*v + 1;
+    return { x: (a*u + b*v + c) / denom, y: (d*u + e*v + f) / denom };
+  }
+
+  // ---- Grading pipeline ----
+  gradeBtn.addEventListener('click', () => {
+    if (!currentExam || corners.length !== 4) return;
+    const { questionCount: qCount, optionCount: optCount, answers: answerKey, passScore, grade, examType, round } = currentExam;
+
+    // full-res source image data
+    const full = document.createElement('canvas');
+    full.width = img.naturalWidth;
+    full.height = img.naturalHeight;
+    const fctx = full.getContext('2d');
+    fctx.drawImage(img, 0, 0);
+    const srcData = fctx.getImageData(0, 0, full.width, full.height).data;
+    const srcW = full.width, srcH = full.height;
+
+    const h = computeHomography(corners);
+
+    const destW = 480;
+    const rowH = 28;
+    const destH = rowH * qCount;
+    const colW = destW / optCount;
+
+    function sampleGray(u, v){
+      const p = applyHomography(h, u, v);
+      const sx = Math.min(srcW-1, Math.max(0, Math.round(p.x)));
+      const sy = Math.min(srcH-1, Math.max(0, Math.round(p.y)));
+      const idx = (sy * srcW + sx) * 4;
+      return 0.299*srcData[idx] + 0.587*srcData[idx+1] + 0.114*srcData[idx+2];
+    }
+
+    const studentAnswers = [];
+    const flags = [];
+
+    for (let r=0; r<qCount; r++){
+      const means = [];
+      for (let c=0; c<optCount; c++){
+        let sum = 0, n = 0;
+        // sample interior of cell with inset padding, 6x6 grid of samples
+        for (let sy=0; sy<6; sy++){
+          for (let sx=0; sx<6; sx++){
+            const u = (c*colW + colW*(0.25 + 0.5*sx/5)) / destW;
+            const v = (r*rowH + rowH*(0.25 + 0.5*sy/5)) / destH;
+            sum += sampleGray(u, v);
+            n++;
+          }
+        }
+        means.push(sum/n);
+      }
+      const sorted = means.slice().sort((a,b) => a-b);
+      const minVal = sorted[0];
+      const secondVal = sorted[1];
+      const markedCol = means.indexOf(minVal);
+
+      let flag = null;
+      if (minVal > 195){
+        flag = 'NO_MARK'; // nothing dark enough -> no response
+      } else if ((secondVal - minVal) < 18){
+        flag = 'UNCERTAIN'; // ambiguous between two options
+      }
+      studentAnswers.push(flag === 'NO_MARK' ? null : markedCol + 1);
+      flags.push(flag);
+    }
+
+    lastResult = { qCount, optCount, answerKey, studentAnswers, flags, passScore, grade, examType, round };
+    renderResult();
+  });
+
+  function renderResult(){
+    const { qCount, answerKey, studentAnswers, flags, passScore, grade, examType, round } = lastResult;
+    let correct = 0, uncertain = 0;
+    const tbody = document.querySelector('#resultTable tbody');
+    tbody.innerHTML = '';
+
+    for (let i=0;i<qCount;i++){
+      const sa = studentAnswers[i];
+      const key = answerKey[i];
+      const isCorrect = sa === key;
+      if (isCorrect) correct++;
+      if (flags[i] === 'UNCERTAIN') uncertain++;
+
+      const tr = document.createElement('tr');
+      let remark = '-';
+      if (flags[i] === 'NO_MARK') remark = '<span class="tag tag-warn">응답없음</span>';
+      else if (flags[i] === 'UNCERTAIN') remark = '<span class="tag tag-warn">확인필요</span>';
+
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${sa ?? '-'}</td>
+        <td>${key}</td>
+        <td class="${isCorrect ? 'ans-ok' : 'ans-wrong'}">
+          <span class="tag ${isCorrect ? 'tag-ok' : 'tag-bad'}">${isCorrect ? 'O' : 'X'}</span>
+        </td>
+        <td>${remark}</td>`;
+      tbody.appendChild(tr);
+    }
+
+    const scorePercent = Math.round(correct/qCount*1000)/10;
+    const passed = scorePercent >= passScore;
+
+    const banner = document.getElementById('passFailBanner');
+    banner.className = 'pass-fail-banner ' + (passed ? 'pass' : 'fail');
+    document.getElementById('passFailLabel').textContent = passed ? '✅ 합격' : '❌ 불합격';
+    document.getElementById('passFailMeta').textContent = `${grade} · ${examType} ${round} · 합격 기준 ${passScore}점`;
+
+    document.getElementById('scoreBig').textContent = correct + ' / ' + qCount;
+    document.getElementById('scoreSub').textContent = scorePercent + '점 (100점 환산)';
+    document.getElementById('uncertainCount').textContent = uncertain;
+    resultCard.style.display = 'block';
+    resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  document.getElementById('saveStudentBtn').addEventListener('click', () => {
+    if (!lastResult) return;
+    const name = document.getElementById('studentName').value.trim() || ('학생 ' + (students.length+1));
+    const correct = lastResult.studentAnswers.filter((a,i) => a === lastResult.answerKey[i]).length;
+    const score = Math.round(correct/lastResult.qCount*1000)/10;
+    const passed = score >= lastResult.passScore;
+    const graderName = (document.getElementById('graderName').value || '').trim() || '미입력';
+
+    students.push({
+      id: Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      name, grade: lastResult.grade, examType: lastResult.examType, round: lastResult.round,
+      correct, total: lastResult.qCount, score, passed
+    });
+    saveStudents();
+    updateFilterOptions();
+    renderStudentList();
+    document.getElementById('studentName').value = '';
+    listCard.style.display = 'block';
+
+    // Firebase로도 백그라운드 전송 (실패해도 로컬 저장/명단에는 영향 없음)
+    const cloudStatus = document.getElementById('cloudSyncStatus');
+    if (cloudStatus) cloudStatus.textContent = '☁️ 전송 중...';
+    if (typeof window.nabiLogResultToFirebase === 'function'){
+      window.nabiLogResultToFirebase({
+        examType: lastResult.examType,
+        grade: lastResult.grade,
+        round: lastResult.round,
+        graderName,
+        studentName: name,
+        correct,
+        total: lastResult.qCount,
+        score,
+        passed
+      }).then(res => {
+        if (!cloudStatus) return;
+        cloudStatus.textContent = res.ok ? '☁️ 전송 완료' : '⚠️ 전송 실패 (이 기기엔 저장됨)';
+      });
+    } else if (cloudStatus){
+      cloudStatus.textContent = '⚠️ Firebase 연결 안 됨 (이 기기엔 저장됨)';
+    }
+  });
+
+  const filterExamType = document.getElementById('filterExamType');
+  const filterGrade = document.getElementById('filterGrade');
+  const filterRound = document.getElementById('filterRound');
+
+  function uniqueSorted(arr){ return Array.from(new Set(arr)).sort(); }
+
+  function updateFilterOptions(){
+    const keepVal = (sel) => sel.value;
+    const prevET = keepVal(filterExamType), prevG = keepVal(filterGrade), prevR = keepVal(filterRound);
+
+    filterExamType.innerHTML = '<option value="">전체</option>' +
+      uniqueSorted(students.map(s => s.examType)).map(v => `<option value="${v}">${v}</option>`).join('');
+    filterGrade.innerHTML = '<option value="">전체</option>' +
+      uniqueSorted(students.map(s => s.grade)).map(v => `<option value="${v}">${v}</option>`).join('');
+    filterRound.innerHTML = '<option value="">전체</option>' +
+      uniqueSorted(students.map(s => s.round)).map(v => `<option value="${v}">${v}</option>`).join('');
+
+    if ([...filterExamType.options].some(o => o.value === prevET)) filterExamType.value = prevET;
+    if ([...filterGrade.options].some(o => o.value === prevG)) filterGrade.value = prevG;
+    if ([...filterRound.options].some(o => o.value === prevR)) filterRound.value = prevR;
+  }
+
+  [filterExamType, filterGrade, filterRound].forEach(sel => {
+    sel.addEventListener('change', renderStudentList);
+  });
+
+  function getFilteredStudents(){
+    return students.filter(s =>
+      (!filterExamType.value || s.examType === filterExamType.value) &&
+      (!filterGrade.value || s.grade === filterGrade.value) &&
+      (!filterRound.value || s.round === filterRound.value)
+    );
+  }
+
+  function deleteStudent(id){
+    if (!confirm('이 결과를 삭제할까요?')) return;
+    students = students.filter(s => s.id !== id);
+    saveStudents();
+    updateFilterOptions();
+    renderStudentList();
+  }
+
+  function renderStudentList(){
+    const container = document.getElementById('studentList');
+    container.innerHTML = '';
+    const filtered = getFilteredStudents();
+
+    // 시험구분 → 급수 → 회차 순으로 그룹핑
+    const groups = {};
+    filtered.forEach(s => {
+      const key = `${s.examType}__${s.grade}__${s.round}`;
+      if (!groups[key]) groups[key] = { examType: s.examType, grade: s.grade, round: s.round, items: [] };
+      groups[key].items.push(s);
+    });
+
+    const groupKeys = Object.keys(groups).sort((a,b) => {
+      const ga = groups[a], gb = groups[b];
+      return (ga.examType+ga.grade+ga.round).localeCompare(gb.examType+gb.grade+gb.round, 'ko');
+    });
+
+    groupKeys.forEach(key => {
+      const g = groups[key];
+      g.items.sort((a,b) => b.score - a.score);
+      const avg = g.items.reduce((a,s)=>a+s.score,0) / g.items.length;
+      const passCount = g.items.filter(s=>s.passed).length;
+
+      const header = document.createElement('div');
+      header.className = 'group-header';
+      header.innerHTML = `<span>${g.examType} · ${g.grade} · ${g.round}</span>
+        <span class="sub">${g.items.length}명 · 평균 ${Math.round(avg*10)/10}점 · 합격 ${passCount}명</span>`;
+      container.appendChild(header);
+
+      g.items.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'student-list-item';
+        div.innerHTML = `<span><span class="name">${s.name}</span> &nbsp; ${s.correct}/${s.total}</span>
+          <span class="score">${s.score}점 <span class="tag ${s.passed ? 'tag-ok' : 'tag-bad'}">${s.passed ? '합격' : '불합격'}</span></span>`;
+        const delBtn = document.createElement('button');
+        delBtn.className = 'row-del';
+        delBtn.textContent = '삭제';
+        delBtn.addEventListener('click', () => deleteStudent(s.id));
+        div.appendChild(delBtn);
+        container.appendChild(div);
+      });
+    });
+
+    if (filtered.length === 0){
+      container.innerHTML = '<div class="hint">표시할 결과가 없습니다.</div>';
+    }
+
+    if (filtered.length){
+      const avg = filtered.reduce((a,s) => a+s.score, 0) / filtered.length;
+      const passCount = filtered.filter(s => s.passed).length;
+      document.getElementById('avgHint').textContent = `총 ${filtered.length}명 · 평균 ${Math.round(avg*10)/10}점 · 합격 ${passCount}명`;
+    } else {
+      document.getElementById('avgHint').textContent = '';
+    }
+  }
+
+  document.getElementById('clearAllBtn').addEventListener('click', () => {
+    if (!confirm('저장된 결과를 전부 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+    students = [];
+    saveStudents();
+    updateFilterOptions();
+    renderStudentList();
+  });
+
+  document.getElementById('exportCsvBtn').addEventListener('click', () => {
+    const filtered = getFilteredStudents().slice().sort((a,b) =>
+      (a.examType+a.grade+a.round).localeCompare(b.examType+b.grade+b.round, 'ko') || b.score - a.score
+    );
+    let csv = '시험구분,급수,회차,이름,점수,합격여부,정답수,문항수\n';
+    filtered.forEach(s => { csv += `${s.examType},${s.grade},${s.round},${s.name},${s.score},${s.passed ? '합격' : '불합격'},${s.correct},${s.total}\n`; });
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '나비독서_채점결과_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // ============================================================
+  // GitHub 자동 동기화: 페이지가 열릴 때 최신 정답 데이터를 조용히 받아옵니다.
+  // 인터넷이 없거나 가져오기에 실패하면 마지막으로 저장된(localStorage) 데이터를 그대로 사용합니다.
+  // TODO: 권명인님 GitHub 저장소에 nabi_answer_db.json을 올린 뒤, 아래 raw 링크로 교체하세요.
+  //   예: https://raw.githubusercontent.com/사용자명/저장소명/main/nabi_answer_db.json
+  // ============================================================
+  const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/nabi_answer_db.json';
+
+  function syncFromGithub(){
+    if (!GITHUB_JSON_URL || GITHUB_JSON_URL.includes('YOUR_USERNAME')) return; // 아직 링크 설정 전
+    fetch(GITHUB_JSON_URL, { cache: 'no-store' })
+      .then(res => { if (!res.ok) throw new Error('fetch failed'); return res.json(); })
+      .then(data => {
+        ANSWER_DB = data;
+        saveAnswerDB(ANSWER_DB);
+        refreshGradeOptionsFromDB();
+        restoreLastSelection();
+        if (adminPanel.style.display === 'block'){
+          populateAdminGradeSelect();
+          renderAdminRoundList();
+        }
+      })
+      .catch(() => { /* 오프라인 또는 실패 시 캐시된 데이터를 그대로 사용 */ });
+  }
+
+  // ============================================================
+  // 관리자 모드 (PIN 필요): 회차 추가/수정/삭제, 전체 데이터 내보내기
+  // ============================================================
+  const adminPanel = document.getElementById('adminPanel');
+  const adminGrade = document.getElementById('adminGrade');
+  const adminExamType = document.getElementById('adminExamType');
+  const adminRound = document.getElementById('adminRound');
+  const adminQCount = document.getElementById('adminQCount');
+  const adminOptCount = document.getElementById('adminOptCount');
+  const adminPassScore = document.getElementById('adminPassScore');
+  const adminAnswers = document.getElementById('adminAnswers');
+  const adminRoundList = document.getElementById('adminRoundList');
+
+  function populateAdminGradeSelect(){
+    adminGrade.innerHTML = '';
+    GRADE_LIST.forEach(g => {
+      const opt = document.createElement('option');
+      opt.value = g; opt.textContent = g;
+      adminGrade.appendChild(opt);
+    });
+  }
+
+  document.getElementById('adminToggleBtn').addEventListener('click', () => {
+    if (adminPanel.style.display === 'block'){
+      adminPanel.style.display = 'none';
+      return;
+    }
+    const pin = prompt('관리자 PIN을 입력하세요');
+    if (pin === null) return;
+    if (pin !== ADMIN_PIN){
+      alert('PIN이 올바르지 않습니다.');
+      return;
+    }
+    populateAdminGradeSelect();
+    renderAdminRoundList();
+    adminPanel.style.display = 'block';
+    adminPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('adminSaveBtn').addEventListener('click', () => {
+    const g = adminGrade.value;
+    const t = adminExamType.value;
+    const r = adminRound.value.trim();
+    const qc = parseInt(adminQCount.value, 10);
+    const oc = parseInt(adminOptCount.value, 10);
+    const ps = parseInt(adminPassScore.value, 10);
+    const answers = adminAnswers.value.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+
+    if (!g || !t || !r){ alert('급수 · 시험구분 · 회차를 모두 입력하세요.'); return; }
+    if (!qc || !oc){ alert('문항 수와 선택지 수를 확인하세요.'); return; }
+    if (answers.length !== qc){
+      alert(`정답 개수(${answers.length}개)가 문항 수(${qc})와 다릅니다. 확인 후 다시 입력하세요.`);
+      return;
+    }
+
+    if (!ANSWER_DB[g]) ANSWER_DB[g] = { optionCount: oc, passScore: ps, examTypes: {} };
+    ANSWER_DB[g].optionCount = oc;
+    ANSWER_DB[g].passScore = ps;
+    if (!ANSWER_DB[g].examTypes[t]) ANSWER_DB[g].examTypes[t] = {};
+    ANSWER_DB[g].examTypes[t][r] = { questionCount: qc, answers };
+
+    saveAnswerDB(ANSWER_DB);
+    refreshGradeOptionsFromDB();
+    renderAdminRoundList();
+    adminAnswers.value = '';
+    adminRound.value = '';
+    alert(`저장되었습니다: ${g} · ${t} · ${r}`);
+  });
+
+  function renderAdminRoundList(){
+    adminRoundList.innerHTML = '';
+    let count = 0;
+    Object.keys(ANSWER_DB).forEach(g => {
+      Object.keys(ANSWER_DB[g].examTypes).forEach(t => {
+        Object.keys(ANSWER_DB[g].examTypes[t]).forEach(r => {
+          count++;
+          const data = ANSWER_DB[g].examTypes[t][r];
+          const row = document.createElement('div');
+          row.className = 'admin-round-row';
+          row.innerHTML = `<span>${g} · ${t} · ${r} (${data.questionCount}문항)</span>`;
+          const delBtn = document.createElement('button');
+          delBtn.className = 'btn-danger';
+          delBtn.textContent = '삭제';
+          delBtn.addEventListener('click', () => {
+            if (!confirm(`${g} · ${t} · ${r} 를 삭제할까요?`)) return;
+            delete ANSWER_DB[g].examTypes[t][r];
+            saveAnswerDB(ANSWER_DB);
+            refreshGradeOptionsFromDB();
+            renderAdminRoundList();
+          });
+          row.appendChild(delBtn);
+          adminRoundList.appendChild(row);
+        });
+      });
+    });
+    if (count === 0) adminRoundList.innerHTML = '<div class="hint">저장된 회차가 없습니다.</div>';
+  }
+
+  document.getElementById('adminExportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(ANSWER_DB, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'nabi_answer_db_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // ============================================================
+  // CSV 일괄 등록 (관리자 전용) — 엑셀에서 채운 표를 CSV로 올려 한 번에 여러 회차 등록
+  // 형식: 급수,시험구분,회차,문항수,선택지수,합격기준,정답(세미콜론으로 구분)
+  // ============================================================
+  document.getElementById('adminTemplateBtn').addEventListener('click', () => {
+    const header = '급수,시험구분,회차,문항수,선택지수,합격기준,정답(세미콜론구분)\n';
+    const example1 = '8급,정규시험,2703,30,4,70,2;4;1;3;2;2;1;4;3;1;2;3;4;1;2;3;4;1;2;3;1;2;3;4;1;2;3;4;1;2\n';
+    const example2 = '준7급,예상시험,2701,30,4,70,1;3;2;4;1;2;3;4;1;2;3;4;1;2;3;4;1;2;3;4;1;2;3;4;1;2;3;4;1;3\n';
+    const blob = new Blob(['\uFEFF' + header + example1 + example2], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'nabi_answer_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  function parseBulkCSV(text){
+    const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(l => l.trim().length > 0);
+    let startIdx = 0;
+    if (/급수/.test(lines[0])) startIdx = 1;
+    const rows = [];
+    for (let i = startIdx; i < lines.length; i++){
+      const cols = lines[i].split(',').map(c => c.trim());
+      if (cols.length < 7){
+        rows.push({ lineNo: i+1, error: '열 개수 부족(7개 필요)' });
+        continue;
+      }
+      const [grade, examType, round, qCountStr, optCountStr, passScoreStr, answersStr] = cols;
+      const questionCount = parseInt(qCountStr, 10);
+      const optionCount = parseInt(optCountStr, 10);
+      const passScore = parseInt(passScoreStr, 10);
+      const answers = answersStr.split(';').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+
+      if (!grade || !examType || !round){
+        rows.push({ lineNo: i+1, error: '급수/시험구분/회차 누락' });
+        continue;
+      }
+      if (!questionCount || !optionCount || answers.length !== questionCount){
+        rows.push({ lineNo: i+1, grade, examType, round, error: `정답 개수(${answers.length})가 문항수(${questionCount || '?'})와 불일치` });
+        continue;
+      }
+      rows.push({ lineNo: i+1, grade, examType, round, questionCount, optionCount, passScore, answers, ok: true });
+    }
+    return rows;
+  }
+
+  document.getElementById('adminCsvUploadBtn').addEventListener('click', () => {
+    document.getElementById('adminCsvInput').click();
+  });
+
+  document.getElementById('adminCsvInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const rows = parseBulkCSV(ev.target.result);
+      const resultBox = document.getElementById('adminCsvResult');
+      let okCount = 0, failCount = 0;
+      const failLines = [];
+
+      rows.forEach(row => {
+        if (!row.ok){
+          failCount++;
+          failLines.push(`${row.lineNo}행: ${row.error}`);
+          return;
+        }
+        if (!ANSWER_DB[row.grade]){
+          ANSWER_DB[row.grade] = { optionCount: row.optionCount, passScore: row.passScore, examTypes: {} };
+        }
+        ANSWER_DB[row.grade].optionCount = row.optionCount;
+        ANSWER_DB[row.grade].passScore = row.passScore;
+        if (!ANSWER_DB[row.grade].examTypes[row.examType]) ANSWER_DB[row.grade].examTypes[row.examType] = {};
+        ANSWER_DB[row.grade].examTypes[row.examType][row.round] = {
+          questionCount: row.questionCount, answers: row.answers
+        };
+        okCount++;
+      });
+
+      saveAnswerDB(ANSWER_DB);
+      refreshGradeOptionsFromDB();
+      renderAdminRoundList();
+
+      resultBox.innerHTML = `<strong>${okCount}건 등록 완료</strong>` +
+        (failCount > 0 ? `, ${failCount}건 실패<br>${failLines.join('<br>')}` : '');
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  // ---- 모든 DOM/함수 준비 완료 후 최초 1회 드롭다운 초기화 + GitHub 동기화 ----
+  refreshGradeOptionsFromDB();
+  restoreLastSelection();
+  syncFromGithub();
+  if (students.length){
+    updateFilterOptions();
+    renderStudentList();
+    listCard.style.display = 'block';
+  }
+
+})();
+</script>
+</body>
+</html>
